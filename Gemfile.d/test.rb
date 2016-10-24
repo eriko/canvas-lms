@@ -1,7 +1,10 @@
 group :test do
   gem 'gergich', '0.1.5', require: false
   gem 'testingbot', require: false
-  gem 'simplecov', '0.12.0', require: false
+  # simplecov 0.10.0 shows significantly less coverage.
+  # ensure the coverage build shows accurate data
+  # before upgrading past 0.9.2. (CNVS-32826)
+  gem 'simplecov', '0.9.2', require: false
     gem 'docile', '1.1.5', require: false
   gem 'simplecov-rcov', '0.2.3', require: false
   gem 'bluecloth', '2.2.0' # for generating api docs
@@ -14,6 +17,7 @@ group :test do
     gem 'eventmachine', '1.2.0.1', require: false
 
   gem 'rspec', '3.5.0'
+  gem 'rspec_around_all', '0.2.0'
   gem 'rspec-rails', '3.5.2'
   gem 'rspec-collection_matchers', '1.1.2'
 

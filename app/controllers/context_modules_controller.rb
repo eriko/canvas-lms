@@ -73,7 +73,7 @@ class ContextModulesController < ApplicationController
            usage_rights_required: @context.feature_enabled?(:usage_rights_required),
            manage_files: @context.grants_right?(@current_user, session, :manage_files)
         }
-      conditional_release_js_env
+      conditional_release_js_env(includes: :active_rules)
     end
   end
   include ModuleIndexHelper
@@ -174,7 +174,8 @@ class ContextModulesController < ApplicationController
             controller: controller,
             action: 'edit',
             id: @tag.content_id,
-            anchor: 'mastery-paths-editor'
+            anchor: 'mastery-paths-editor',
+            return_to: params[:return_to]
           )
         else
           render status: 404, template: 'shared/errors/404_message'

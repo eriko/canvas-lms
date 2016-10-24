@@ -125,7 +125,7 @@ class AssignmentsController < ApplicationController
         :EXTERNAL_TOOLS => external_tools_json(@external_tools, @context, @current_user, session)
       })
 
-      conditional_release_js_env(@assignment, include_rule: true)
+      conditional_release_js_env(@assignment, includes: :rule)
 
       @can_view_grades = @context.grants_right?(@current_user, session, :view_all_grades)
       @can_grade = @assignment.grants_right?(@current_user, session, :grade)
@@ -375,7 +375,6 @@ class AssignmentsController < ApplicationController
 
   def edit
     rce_js_env(:highrisk)
-
     @assignment ||= @context.assignments.active.find(params[:id])
     if authorized_action(@assignment, @current_user, @assignment.new_record? ? :create : :update)
       @assignment.title = params[:title] if params[:title]
@@ -548,7 +547,7 @@ class AssignmentsController < ApplicationController
   end
 
   def index_edit_params
-    params.slice(*[:title, :due_at, :points_possible, :assignment_group_id])
+    params.slice(*[:title, :due_at, :points_possible, :assignment_group_id, :return_to])
   end
 
 end
