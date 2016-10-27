@@ -1042,7 +1042,7 @@ class Assignment < ActiveRecord::Base
 
     given do |user, session|
       self.context.grants_right?(user, session, :manage_assignments) &&
-        (user.admin_of_root_account?(self.context.root_account) ||
+        (self.context.account_membership_allows(user) ||
          !due_for_any_student_in_closed_grading_period?)
     end
     can :delete
@@ -1132,7 +1132,7 @@ class Assignment < ActiveRecord::Base
       group.users
         .joins(:enrollments)
         .where(:enrollments => { :course_id => self.context})
-        .merge(Course.instance_exec(&Course.reflections[CANVAS_RAILS4_0 ? :admin_visible_student_enrollments : 'admin_visible_student_enrollments'].scope).only(:where))
+        .merge(Course.instance_exec(&Course.reflections['admin_visible_student_enrollments'].scope).only(:where))
         .order("users.id") # this helps with preventing deadlock with other things that touch lots of users
         .uniq
         .to_a

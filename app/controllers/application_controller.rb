@@ -703,7 +703,7 @@ class ApplicationController < ActionController::Base
         # don't load it again if we've already got it
         next if @contexts.any? { |c| c.asset_string == include_context }
         context = Context.find_by_asset_string(include_context)
-        @contexts << context if context && context.grants_right?(@current_user, :read)
+        @contexts << context if context && context.grants_right?(@current_user, session, :read)
       end
     end
 
@@ -923,7 +923,7 @@ class ApplicationController < ActionController::Base
   end
 
   def require_reacceptance_of_terms
-    if session[:require_terms] && !api_request? && request.get?
+    if session[:require_terms] && request.get? && !api_request? && !verified_file_request?
       render "shared/terms_required", status: :unauthorized
       false
     end
@@ -1070,7 +1070,7 @@ class ApplicationController < ActionController::Base
   # analogous to rescue_action_without_handler from ActionPack 2.3
   def rescue_exception(exception)
     raise if Rails.env.development? && !ENV['DISABLE_BETTER_ERRORS']
-    
+
     ActiveSupport::Deprecation.silence do
       message = "\n#{exception.class} (#{exception.message}):\n"
       message << exception.annoted_source_code.to_s if exception.respond_to?(:annoted_source_code)
@@ -1266,6 +1266,10 @@ class ApplicationController < ActionController::Base
     @api_request ||= !!request.path.match(API_REQUEST_REGEX)
   end
 
+  def verified_file_request?
+    params[:controller] == 'files' && params[:action] == 'show' && params[:verifier].present?
+  end
+
   def session_loaded?
     session.send(:loaded?) rescue false
   end
@@ -1286,7 +1290,7 @@ class ApplicationController < ActionController::Base
 
     unless @page
       if params[:titleize].present? && !value_to_boolean(params[:titleize])
-        @page_name = CGI.unescape(@page_name) unless CANVAS_RAILS4_0
+        @page_name = CGI.unescape(@page_name)
         @page = @wiki.build_wiki_page(@current_user, :title => @page_name)
       else
         @page = @wiki.build_wiki_page(@current_user, :url => @page_name)

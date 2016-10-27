@@ -48,6 +48,8 @@ module SeleniumDriverSetup
     driver.manage.timeouts.implicit_wait = IMPLICIT_WAIT_TIMEOUT
     driver.manage.timeouts.script_timeout = 60
 
+    puts "Browser: #{browser_name(driver)} - #{browser_version(driver)}"
+
     driver
   end
 
@@ -133,22 +135,12 @@ module SeleniumDriverSetup
   # oj's xss_safe escapes forward slashes, which makes paths invalid
   # in the firefox profile, which makes log_file asplode
   # see https://github.com/SeleniumHQ/selenium/issues/2435#issuecomment-245458210
-  if CANVAS_RAILS4_0
-    def with_vanilla_json
-      orig_options =  MultiJson.dump_options
-      MultiJson.dump_options = {:escape_mode => :json}
-      yield
-    ensure
-      MultiJson.dump_options = orig_options
-    end
-  else
-    def with_vanilla_json
-      orig_options = Oj.default_options
-      Oj.default_options = {:escape_mode => :json}
-      yield
-    ensure
-      Oj.default_options = orig_options
-    end
+  def with_vanilla_json
+    orig_options = Oj.default_options
+    Oj.default_options = {:escape_mode => :json}
+    yield
+  ensure
+    Oj.default_options = orig_options
   end
 
   def chrome_driver
@@ -229,8 +221,17 @@ module SeleniumDriverSetup
     profile
   end
 
-  def set_native_events(setting)
-    driver.instance_variable_get(:@bridge).instance_variable_get(:@capabilities).instance_variable_set(:@native_events, setting)
+  def browser_name(driver)
+    driver_capabilities(driver).browser_name
+  end
+
+  def browser_version(driver)
+    driver_capabilities(driver).version
+  end
+
+  def driver_capabilities(driver)
+    driver.instance_variable_get(:@bridge)
+          .instance_variable_get(:@capabilities)
   end
 
   def app_host

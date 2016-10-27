@@ -829,9 +829,9 @@ class CoursesController < ApplicationController
   #   - "custom_links": Optionally include plugin-supplied custom links for each student,
   #   such as analytics information
   # @argument user_id [String]
-  #   If included, the user will be queried and if the user is part of the
-  #   users set, the page parameter will be modified so that the page
-  #   containing user_id will be returned.
+  #   If this parameter is given and it corresponds to a user in the course,
+  #   the +page+ parameter will be ignored and the page containing the specified user
+  #   will be returned instead.
   #
   # @argument user_ids[] [Integer]
   #   If included, the course users set will only include users with IDs
@@ -2672,7 +2672,7 @@ class CoursesController < ApplicationController
 
   def can_change_group_weighting_scheme?
     return true unless @course.feature_enabled?(:multiple_grading_periods)
-    return true if @current_user.admin_of_root_account?(@course.root_account)
+    return true if @course.account_membership_allows(@current_user)
     periods = GradingPeriod.for(@course)
     @course.active_assignments.preload(:active_assignment_overrides).none? do |assignment|
       assignment.due_for_any_student_in_closed_grading_period?(periods)

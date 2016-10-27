@@ -1424,9 +1424,9 @@ class Account < ActiveRecord::Base
     end
 
     if settings[:new_custom_help_links]
-      links || Canvas::Help.default_links
+      links || Account::HelpLinks.default_links
     else
-      Canvas::Help.default_links + (links || [])
+      Account::HelpLinks.default_links + (links || [])
     end
   end
 
@@ -1576,10 +1576,6 @@ class Account < ActiveRecord::Base
   scope :processing_sis_batch, -> { where("accounts.current_sis_batch_id IS NOT NULL").order(:updated_at) }
   scope :name_like, lambda { |name| where(wildcard('accounts.name', name)) }
   scope :active, -> { where("accounts.workflow_state<>'deleted'") }
-
-  def canvas_network_enabled?
-    false
-  end
 
   def change_root_account_setting!(setting_name, new_value)
     root_account.settings[setting_name] = new_value
