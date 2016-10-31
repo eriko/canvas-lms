@@ -337,6 +337,11 @@ class AssignmentsController < ApplicationController
     group = get_assignment_group(params[:assignment])
     @assignment ||= @context.assignments.build(strong_assignment_params)
 
+    if params[:assignment][:secure_params]
+      secure_params = Canvas::Security.decode_jwt params[:assignment][:secure_params]
+      @assignment.lti_context_id = secure_params[:lti_context_id]
+    end
+
     @assignment.workflow_state ||= "unpublished"
     @assignment.updating_user = @current_user
     @assignment.content_being_saved_by(@current_user)
@@ -506,7 +511,7 @@ class AssignmentsController < ApplicationController
   #          -H 'Authorization: Bearer <token>'
   # @returns Assignment
   def destroy
-    @assignment = @context.assignments.active.find(params[:id])
+    @assignment = @context.assignments.active.api_id(params[:id])
     if authorized_action(@assignment, @current_user, :delete)
       @assignment.destroy
 

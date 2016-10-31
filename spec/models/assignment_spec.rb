@@ -29,6 +29,16 @@ describe Assignment do
     expect(course).to be_valid
   end
 
+  it "should set the lti_context_id on create" do
+    assignment = @course.assignments.create!(assignment_valid_attributes)
+    expect(assignment.lti_context_id).to be_present
+  end
+
+  it "allows assignment to be found by lti_context_id" do
+    assignment = @course.assignments.create!(assignment_valid_attributes)
+    expect(@course.assignments.api_id("lti_context_id:#{assignment.lti_context_id}")).to eq assignment
+  end
+
   it "should have a useful state machine" do
     assignment_model(course: @course)
     expect(@a.state).to eql(:published)
@@ -101,6 +111,20 @@ describe Assignment do
       expect(@assignment).to be_can_unpublish
       @assignment.unpublish
       expect(@assignment.workflow_state).to eq "unpublished"
+    end
+  end
+
+  describe '#secure_params' do
+    before { setup_assignment_without_submission }
+
+    it 'contains the lti_context_id if the assignment is new' do
+      assignment = Assignment.new
+      lti_assignment_id = Canvas::Security.decode_jwt(assignment.secure_params)[:lti_assignment_id]
+      expect(lti_assignment_id).to be_present
+    end
+
+    it 'returns a jwt' do
+      expect(Canvas::Security.decode_jwt @assignment.secure_params)
     end
   end
 

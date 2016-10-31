@@ -71,7 +71,8 @@ class ExternalToolsController < ApplicationController
   #             "url": "...",
   #             "default": "disabled",
   #             "enabled": "true",
-  #             "visibility": "public"
+  #             "visibility": "public",
+  #             "windowTarget": "_blank"
   #        },
   #        "editor_button": {
   #             "canvas_icon_class": "icon-lti",
@@ -142,7 +143,8 @@ class ExternalToolsController < ApplicationController
       tool: @tool,
       selection_type: placement,
       launch_url: params[:url],
-      content_item_id: params[:content_item_id]
+      content_item_id: params[:content_item_id],
+      secure_params: params[:secure_params]
     )
     display_override = params['borderless'] ? 'borderless' : params[:display]
     render Lti::AppUtil.display_template(@tool.display_type(placement), display_override: display_override)
@@ -422,7 +424,8 @@ class ExternalToolsController < ApplicationController
   #             "url": "...",
   #             "default": "disabled",
   #             "enabled": "true",
-  #             "visibility": "public"
+  #             "visibility": "public",
+  #             "windowTarget": "_blank"
   #        },
   #        "editor_button": {
   #             "canvas_icon_class": "icon-lti",
@@ -538,8 +541,13 @@ class ExternalToolsController < ApplicationController
   end
   protected :find_tool
 
-  def lti_launch(tool:, selection_type: nil, launch_url: nil, content_item_id: nil)
-    opts = {launch_url: launch_url}
+  def lti_launch(tool:, selection_type: nil, launch_url: nil, content_item_id: nil, secure_params: nil)
+    link_params = {custom:{}, ext:{}}
+    if secure_params.present?
+      jwt_body = Canvas::Security.decode_jwt(secure_params)
+      link_params[:ext][:lti_assignment_id] = jwt_body[:lti_assignment_id] if jwt_body[:lti_assignment_id]
+    end
+    opts = {launch_url: launch_url, link_params: link_params}
     @return_url ||= url_for(@context)
     message_type = tool.extension_setting(selection_type, 'message_type') if selection_type
     case message_type
@@ -802,6 +810,11 @@ class ExternalToolsController < ApplicationController
   # @argument course_navigation[visibility] [String, "admins"|"members"]
   #   Who will see the navigation tab. "admins" for course admins, "members" for
   #   students, null for everyone
+  #
+  # @argument course_navigation[windowTarget] [String, "_blank"|"_self"]
+  #   Determines how the navigation tab will be opened.
+  #   "_blank"	Launches the external tool in a new window or tab.
+  #   "_self"	(Default) Launches the external tool in an iframe inside of Canvas.
   #
   # @argument course_navigation[default] [Boolean]
   #   Whether the navigation option will show in the course by default or
