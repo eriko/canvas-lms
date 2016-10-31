@@ -4,16 +4,16 @@
 <td>
   {{#if canViewSisId}}
   <a href="{{html_url}}" class="roster_user_name">{{name}}</a>
-  {{unless Handlebars.Utils.isEmpty(short_name)}}
-    ({{short_name}})
+  {{#if roster_name}}
+  <span id="roster_name_{{id}}">({{roster_name}})</span>
   {{/if}}
   {{else}}
   <a href="{{html_url}}" class="roster_user_name">
-    {{if Handlebars.Utils.isEmpty(short_name)}}
-      {{name}}
-    {{else}}
-      {{short_name}}
-    {{/if}}
+  {{#if roster_name}}
+        <span id="roster_name_{{id}}">{{roster_name}}</span>
+  {{else}}
+  <span id="roster_name_{{id}}">{{name}}</span>
+  {{/if}}
   </a>
   {{/if}}
   {{#if isPending}}<span class="label label-info" title="{{#t "pending_acceptance_explanation"}}This user has not yet accepted the invitation to the course{{/t}}">{{#t "pending_acceptance_of_invitation"}}pending{{/t}}</span>{{/if}}
